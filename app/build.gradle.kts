@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "carreiras.com.github.todolist"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "carreiras.com.github.todolist"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -28,12 +28,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlin {
-        jvmToolchain(11)
-    }
     buildFeatures {
         compose = true
     }
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 dependencies {

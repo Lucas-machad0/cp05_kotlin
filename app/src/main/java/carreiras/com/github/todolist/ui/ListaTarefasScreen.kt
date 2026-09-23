@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,9 +26,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +53,7 @@ fun ListaTarefasScreen(
     onEditarTarefa: (Int) -> Unit
 ) {
     val tarefas by viewModel.tarefas.collectAsStateWithLifecycle()
+    var tarefaParaExcluir by remember { mutableStateOf<Tarefa?>(null) }
 
     ListaTarefasContent(
         tarefas = tarefas,
@@ -56,7 +62,13 @@ fun ListaTarefasScreen(
         onCheckedChange = { tarefa, concluida ->
             viewModel.atualizar(tarefa.copy(concluida = concluida))
         },
-        onDeletar = { tarefa -> viewModel.deletar(tarefa) }
+        onDeletar = { tarefa -> tarefaParaExcluir = tarefa },
+        tarefaParaExcluir = tarefaParaExcluir,
+        onConfirmarExclusao = { tarefa ->
+            viewModel.deletar(tarefa)
+            tarefaParaExcluir = null
+        },
+        onCancelarExclusao = { tarefaParaExcluir = null }
     )
 }
 
@@ -67,8 +79,25 @@ fun ListaTarefasContent(
     onNovaTarefa: () -> Unit,
     onEditarTarefa: (Int) -> Unit,
     onCheckedChange: (Tarefa, Boolean) -> Unit,
-    onDeletar: (Tarefa) -> Unit
+    onDeletar: (Tarefa) -> Unit,
+    tarefaParaExcluir: Tarefa? = null,
+    onConfirmarExclusao: (Tarefa) -> Unit = {},
+    onCancelarExclusao: () -> Unit = {}
 ) {
+    tarefaParaExcluir?.let { tarefa ->
+        AlertDialog(
+            onDismissRequest = onCancelarExclusao,
+            title = { Text("Excluir tarefa") },
+            text = { Text("A tarefa \"${tarefa.titulo}\" será excluída. Deseja continuar?") },
+            confirmButton = {
+                TextButton(onClick = { onConfirmarExclusao(tarefa) }) { Text("Excluir") }
+            },
+            dismissButton = {
+                TextButton(onClick = onCancelarExclusao) { Text("Cancelar") }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Minhas Tarefas") })
@@ -173,6 +202,23 @@ private fun ListaTarefasContentPreview() {
         onEditarTarefa = {},
         onCheckedChange = { _, _ -> },
         onDeletar = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Confirmação de exclusão")
+@Composable
+private fun ListaTarefasConfirmarExclusaoPreview() {
+    val tarefa = Tarefa(id = 1, titulo = "Estudar Room", descricao = "Revisar anotações e DAO", concluida = false)
+    ListaTarefasContent(
+        tarefas = listOf(
+            tarefa,
+            Tarefa(id = 2, titulo = "Enviar atividade", descricao = "Upload no portal da FIAP", concluida = true)
+        ),
+        onNovaTarefa = {},
+        onEditarTarefa = {},
+        onCheckedChange = { _, _ -> },
+        onDeletar = {},
+        tarefaParaExcluir = tarefa
     )
 }
 
